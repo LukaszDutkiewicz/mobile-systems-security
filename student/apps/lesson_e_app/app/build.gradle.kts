@@ -177,6 +177,15 @@ tasks.register("bsmEvidence") {
                 ),
             ),
         )
+        println(
+            evidenceFor(
+                taskId = "E05",
+                fqcn = "com.example.secretlab.secure.SecretBoxStudentTest",
+                required = listOf(
+                    "bindsCiphertextToContextWithAad",
+                ),
+            ),
+        )
         println(evidenceOverall())
     }
 }

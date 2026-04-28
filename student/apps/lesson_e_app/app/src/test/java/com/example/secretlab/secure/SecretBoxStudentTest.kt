@@ -56,4 +56,19 @@ class SecretBoxStudentTest {
         val decrypted = box.decrypt(message)
         assertNull(decrypted)
     }
+
+    @Test
+    fun bindsCiphertextToContextWithAad() {
+        val keyProvider = InMemoryKeyProvider(random)
+        val box = SecretBox(keyProvider)
+
+        val plaintext = "seed".encodeToByteArray()
+        val iv = ByteArray(SecretBox.IV_BYTES).also(random::nextBytes)
+        val ctxGood = "mfa:totp_seed:v1".encodeToByteArray()
+        val ctxBad = "mfa:totp_seed:v2".encodeToByteArray()
+
+        val message = box.encryptBound(plaintext, iv, ctxGood)
+        assertArrayEquals(plaintext, box.decryptBound(message, ctxGood))
+        assertNull(box.decryptBound(message, ctxBad))
+    }
 }

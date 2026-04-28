@@ -15,16 +15,21 @@ class BiometricBoundSecretStore(
     private var encryptedSecret: ByteArray? = null
 
     fun setSecret(plaintextSecret: ByteArray, iv: ByteArray) {
-        encryptedSecret = secretBox.encrypt(plaintextSecret, iv)
+        // TODO(L05-4): bind the secret to a fixed context using AAD, so ciphertext can't be reused
+        // in a different place/purpose.
+        encryptedSecret = secretBox.encryptBound(plaintextSecret, iv, SECRET_CONTEXT)
     }
 
     fun revealSecret(token: GateToken?): ByteArray? {
         val message = encryptedSecret ?: return null
         // TODO(L05-3): enforce the gate policy:
         // - token must be non-null
-        // - token age must be <= maxTokenAgeSeconds (based on `clock()`)
+        // - token age must satisfy: 0 <= age <= maxTokenAgeSeconds (based on `clock()` and token epoch seconds)
         // - return null when gate conditions are not met
-        return secretBox.decrypt(message)
+        return secretBox.decryptBound(message, SECRET_CONTEXT)
+    }
+
+    companion object {
+        private val SECRET_CONTEXT: ByteArray = "bsm:l05e:seed:v1".encodeToByteArray()
     }
 }
-

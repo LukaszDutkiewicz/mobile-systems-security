@@ -16,6 +16,7 @@ class SecretBox(
         // TODO(L05-1): implement AES/GCM/NoPadding encryption using the key from `keyProvider`.
         // Requirements checked by tests:
         // - Uses the provided IV (do not generate a new one inside the function).
+        // - Rejects invalid IV length with IllegalArgumentException.
         // - Output layout is `iv || ciphertextAndTag`.
         // - Must be deterministic for identical inputs (since IV is provided).
         return iv + plaintext
@@ -27,6 +28,19 @@ class SecretBox(
         // - Returns null when the message is too short to contain an IV + tag.
         // - Returns null when authentication fails (tamper detected).
         return message
+    }
+
+    fun encryptBound(plaintext: ByteArray, iv: ByteArray, context: ByteArray): ByteArray {
+        // TODO(L05-5): same as encrypt(...), but bind the ciphertext to `context` using AAD.
+        // Requirements checked by tests:
+        // - Uses cipher.updateAAD(context) before doFinal(...).
+        // - Decryption must fail (return null) if context differs.
+        return encrypt(plaintext, iv)
+    }
+
+    fun decryptBound(message: ByteArray, context: ByteArray): ByteArray? {
+        // TODO(L05-6): same as decrypt(...), but uses the provided `context` as AAD.
+        return decrypt(message)
     }
 
     private fun cipherEncrypt(iv: ByteArray): Cipher {
@@ -48,4 +62,3 @@ class SecretBox(
         private const val TAG_BITS: Int = 128
     }
 }
-
