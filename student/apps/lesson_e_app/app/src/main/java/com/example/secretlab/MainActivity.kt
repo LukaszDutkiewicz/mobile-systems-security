@@ -3,6 +3,7 @@ package com.example.secretlab
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,13 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.secretlab.secure.BiometricBoundSecretStore
+import com.example.secretlab.secure.BiometricPromptGate
 import com.example.secretlab.secure.GateToken
 import com.example.secretlab.secure.InMemoryKeyProvider
 import com.example.secretlab.secure.SecretBox
 import com.example.secretlab.ui.theme.SecretLabTheme
 import java.security.SecureRandom
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,14 +53,24 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SecretLabTheme {
-                LessonEApp(store = store, clock = clock)
+                LessonEApp(
+                    activity = this,
+                    store = store,
+                    clock = clock,
+                    biometricGate = BiometricPromptGate(clock = clock),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun LessonEApp(store: BiometricBoundSecretStore, clock: () -> Long) {
+private fun LessonEApp(
+    activity: FragmentActivity,
+    store: BiometricBoundSecretStore,
+    clock: () -> Long,
+    biometricGate: BiometricPromptGate,
+) {
     var banner by remember { mutableStateOf("Goal: protect a local secret behind a local user gate (simulated).") }
     var tokenIssuedAt by remember { mutableStateOf<Long?>(null) }
     var secretPreview by remember { mutableStateOf<String?>(null) }
@@ -100,6 +112,24 @@ private fun LessonEApp(store: BiometricBoundSecretStore, clock: () -> Long) {
                         banner = "Gate satisfied at t=$now. Token issued."
                     }) {
                         Text("Issue GateToken")
+                    }
+
+                    Button(onClick = {
+                        if (!biometricGate.canAuthenticate(activity)) {
+                            banner = "BiometricPrompt unavailable on this device/emulator."
+                            return@Button
+                        }
+                        biometricGate.authenticate(activity) { token ->
+                            if (token == null) {
+                                banner = "Biometric auth failed/canceled."
+                            } else {
+                                tokenIssuedAt = token.issuedAtEpochSeconds
+                                gateNowEpochSeconds = tokenIssuedAt.toString()
+                                banner = "Biometric gate satisfied. Token issued."
+                            }
+                        }
+                    }) {
+                        Text("Verify biometrics (real prompt)")
                     }
                 }
             }
