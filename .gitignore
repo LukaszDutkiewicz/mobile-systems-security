@@ -9,6 +9,7 @@ bin/
 gen/
 out/
 .gradle/
+.gradle-home/
 build/
 local.properties
 *.log

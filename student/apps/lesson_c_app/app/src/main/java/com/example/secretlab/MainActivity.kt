@@ -105,8 +105,23 @@ private fun SecretLabApp(
             when (pane) {
                 Pane.Login -> LoginCard(
                     localAccountMail = accountVault.readAccountMail(),
+                    localAccountSecret = accountVault.readAccountSecret(),
                     onSignIn = { mail, secret ->
-                        val result = authGateway.signIn(mail, secret)
+                        val localMail = accountVault.readAccountMail()
+                        val localSecret = accountVault.readAccountSecret()
+                        val result = if (
+                            localMail != null &&
+                            localSecret != null &&
+                            mail.trim() == localMail &&
+                            secret == localSecret
+                        ) {
+                            com.example.secretlab.data.SignInResult(
+                                displayName = "Local: $localMail",
+                                travelCard = "local-${java.util.UUID.randomUUID().toString().replace("-", "").take(18)}",
+                            )
+                        } else {
+                            authGateway.signIn(mail, secret)
+                        }
                         if (result != null) {
 //
                             vault.saveTravelCard(result.travelCard) // TODO(C05-2): move the session artifact to SecureSessionStore.
@@ -153,6 +168,7 @@ private fun SecretLabApp(
 @Composable
 private fun LoginCard(
     localAccountMail: String?,
+    localAccountSecret: String?,
     onSignIn: (String, String) -> Unit,
     onOpenCreateAccount: () -> Unit,
 ) {
@@ -183,6 +199,11 @@ private fun LoginCard(
             )
             Button(onClick = { onSignIn(mail, secret) }) {
                 Text("Sign in")
+            }
+            if (localAccountMail != null && localAccountSecret != null) {
+                Button(onClick = { onSignIn(mail, secret) }) {
+                    Text("Sign in with local account")
+                }
             }
             Button(onClick = onOpenCreateAccount) {
                 Text("Create local account")
