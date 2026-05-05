@@ -26,6 +26,19 @@ class BiometricBoundSecretStore(
         // - token must be non-null
         // - token age must satisfy: 0 <= age <= maxTokenAgeSeconds (based on `clock()` and token epoch seconds)
         // - return null when gate conditions are not met
+
+        if (token == null) {
+            return null
+        }
+
+        val now = clock()
+        val age = now - token.issuedAtEpochSeconds
+
+        if (age < 0 || age > maxTokenAgeSeconds){
+            return null
+        }
+
+
         return secretBox.decryptBound(message, SECRET_CONTEXT)
     }
 

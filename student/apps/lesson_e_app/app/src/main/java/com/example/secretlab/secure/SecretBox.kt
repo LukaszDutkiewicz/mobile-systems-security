@@ -19,7 +19,10 @@ class SecretBox(
         // Requirements checked by tests:
         // - returns a ByteArray of length IV_BYTES
         // - successive calls should not return the same IV
-        return ByteArray(IV_BYTES)
+        val iv = ByteArray(IV_BYTES)
+        random.nextBytes(iv)
+
+        return iv
     }
 
     fun encrypt(plaintext: ByteArray, iv: ByteArray): ByteArray {
@@ -29,7 +32,14 @@ class SecretBox(
         // - Rejects invalid IV length with IllegalArgumentException.
         // - Output layout is `iv || ciphertextAndTag`.
         // - Must be deterministic for identical inputs (since IV is provided).
-        return iv + plaintext
+        if (iv.size != IV_BYTES){
+            throw IllegalArgumentException("Invalid IV length: expected $IV_BYTES, got ${iv.size} bytes.")
+        }
+
+        val cipher = cipherEncrypt(iv)
+        val ciphertextAndTag = cipher.doFinal(plaintext)
+
+        return iv + ciphertextAndTag
     }
 
     fun decrypt(message: ByteArray): ByteArray? {
@@ -37,7 +47,19 @@ class SecretBox(
         // Requirements checked by tests:
         // - Returns null when the message is too short to contain an IV + tag.
         // - Returns null when authentication fails (tamper detected).
-        return message
+        val minLength = IV_BYTES + (TAG_BITS/8)
+        if (message.size < minLength) {
+            return null
+        }
+
+        return try{
+            val iv = message.sliceArray(0 until IV_BYTES)
+            val ciphertextAndTag = message.sliceArray(IV_BYTES until message.size)
+            val cipher = cipherDecrypt(iv)
+            cipher.doFinal(ciphertextAndTag)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     fun encryptBound(plaintext: ByteArray, iv: ByteArray, context: ByteArray): ByteArray {
@@ -45,12 +67,32 @@ class SecretBox(
         // Requirements checked by tests:
         // - Uses cipher.updateAAD(context) before doFinal(...).
         // - Decryption must fail (return null) if context differs.
-        return encrypt(plaintext, iv)
+        if (iv.size != IV_BYTES) {
+            throw IllegalArgumentException("Invalid IV length")
+        }
+
+        val cipher = cipherEncrypt(iv)
+        cipher.updateAAD(context)
+        val ciphertextAndTag = cipher.doFinal(plaintext)
+        return iv + ciphertextAndTag
     }
 
     fun decryptBound(message: ByteArray, context: ByteArray): ByteArray? {
         // TODO(L05-6): same as decrypt(...), but uses the provided `context` as AAD.
-        return decrypt(message)
+        val minLength = IV_BYTES + (TAG_BITS/8)
+        if (message.size < minLength) {
+            return null
+        }
+
+        return try{
+            val iv = message.sliceArray(0 until IV_BYTES)
+            val ciphertextAndTag = message.sliceArray(IV_BYTES until message.size)
+            val cipher = cipherDecrypt(iv)
+            cipher.updateAAD(context)
+            cipher.doFinal(ciphertextAndTag)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun cipherEncrypt(iv: ByteArray): Cipher {
