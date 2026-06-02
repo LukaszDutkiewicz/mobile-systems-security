@@ -1,24 +1,55 @@
 package com.example.secretlab.lab
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TaskCompletionStudentTest {
     @Test
-    fun task2CodeAppearsOnlyWhenSecureStorageAndApiKeyAreReady() {
-        assertNull(TaskCompletion.task2Code(ApiKeyState(storedApiKey = null, canUseSecureStorage = true)))
-        assertNull(TaskCompletion.task2Code(ApiKeyState(storedApiKey = "abc", canUseSecureStorage = false)))
-        assertEquals(
-            TaskCompletion.TASK2_CODE,
-            TaskCompletion.task2Code(ApiKeyState(storedApiKey = "api-key-present", canUseSecureStorage = true)),
+    fun task2CodeAppearsOnlyWhenProvenanceChecksPass() {
+        assertFalse(
+            TaskCompletion.task2Check(
+                ProvenanceState(
+                    signingIdentityMatchesExpected = false,
+                    buildLooksTampered = false,
+                    installTimeTrustIsSeparatedFromRuntimeTrust = true,
+                ),
+            ),
+        )
+        assertFalse(
+            TaskCompletion.task2Check(
+                ProvenanceState(
+                    signingIdentityMatchesExpected = true,
+                    buildLooksTampered = true,
+                    installTimeTrustIsSeparatedFromRuntimeTrust = true,
+                ),
+            ),
+        )
+        assertFalse(
+            TaskCompletion.task2Check(
+                ProvenanceState(
+                    signingIdentityMatchesExpected = true,
+                    buildLooksTampered = false,
+                    installTimeTrustIsSeparatedFromRuntimeTrust = false,
+                ),
+            ),
+        )
+        assertTrue(
+            TaskCompletion.task2Check(
+                ProvenanceState(
+                    signingIdentityMatchesExpected = true,
+                    buildLooksTampered = false,
+                    installTimeTrustIsSeparatedFromRuntimeTrust = true,
+                ),
+            ),
         )
     }
 
     @Test
     fun task3CodeAppearsOnlyWhenIntegrityVerdictAndBindingAreReady() {
-        assertNull(
-            TaskCompletion.task3Code(
+        assertFalse(
+            TaskCompletion.task3Check(
                 IntegrityState(
                     verdict = null,
                     appPackageNameMatches = true,
@@ -26,8 +57,8 @@ class TaskCompletionStudentTest {
                 ),
             ),
         )
-        assertNull(
-            TaskCompletion.task3Code(
+        assertFalse(
+            TaskCompletion.task3Check(
                 IntegrityState(
                     verdict = "ALLOW",
                     appPackageNameMatches = false,
@@ -35,8 +66,8 @@ class TaskCompletionStudentTest {
                 ),
             ),
         )
-        assertNull(
-            TaskCompletion.task3Code(
+        assertFalse(
+            TaskCompletion.task3Check(
                 IntegrityState(
                     verdict = "ALLOW",
                     appPackageNameMatches = true,
@@ -44,9 +75,8 @@ class TaskCompletionStudentTest {
                 ),
             ),
         )
-        assertEquals(
-            TaskCompletion.TASK3_CODE,
-            TaskCompletion.task3Code(
+        assertTrue(
+            TaskCompletion.task3Check(
                 IntegrityState(
                     verdict = "ALLOW",
                     appPackageNameMatches = true,

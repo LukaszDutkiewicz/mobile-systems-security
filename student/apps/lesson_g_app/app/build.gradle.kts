@@ -5,8 +5,16 @@ plugins {
 }
 
 import java.io.File
+import java.util.Properties
 import javax.xml.parsers.DocumentBuilderFactory
 import org.gradle.api.tasks.testing.Test
+
+val localProps = Properties().apply {
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        localPropsFile.inputStream().use { load(it) }
+    }
+}
 
 android {
     namespace = "com.example.secretlab"
@@ -19,9 +27,26 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField(
+            "String",
+            "MAP_API_KEY_B64",
+            "\"${localProps.getProperty("map_api_key_b64", "")}\"",
+        )
+        buildConfigField(
+            "String",
+            "TASK4_SECRET_B64",
+            "\"${localProps.getProperty("task4_secret_b64", "")}\"",
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags += ""
+            }
         }
     }
 
@@ -46,6 +71,13 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
     }
 
     packaging {
@@ -128,7 +160,7 @@ tasks.register("bsmEvidence") {
             val suite = xmlFiles.asSequence()
                 .mapNotNull(::parseSuite)
                 .firstOrNull { suiteName(it) == fqcn }
-                ?: return "$taskId|ok=NO|reason=MISSING_SUITE=$fqcn"
+                ?: return ""
 
             val tests = suiteAttrInt(suite, "tests")
             val failures = suiteAttrInt(suite, "failures")
@@ -138,31 +170,25 @@ tasks.register("bsmEvidence") {
             val statuses = required.joinToString(",") { "${it}=${caseStatus(suite, it)}" }
             val requiredOk = required.all { caseStatus(suite, it) == "PASS" }
             val ok = requiredOk && failures == 0 && errors == 0
-            val okS = if (ok) "YES" else "NO"
-            val codePart = if (ok && code != null) "|code=$code" else ""
-            return "$taskId|ok=$okS$codePart|tests=$tests|failures=$failures|errors=$errors|skipped=$skipped|$statuses"
+            return if (ok && code != null) code else ""
         }
 
-        println(
-            evidenceFor(
-                taskId = "G02",
-                fqcn = "com.example.secretlab.lab.TaskCompletionStudentTest",
-                required = listOf(
-                    "task2CodeAppearsOnlyWhenSecureStorageAndApiKeyAreReady",
-                ),
-                code = "K2Q7M",
+        evidenceFor(
+            taskId = "G02",
+            fqcn = "com.example.secretlab.lab.TaskCompletionStudentTest",
+            required = listOf(
+                "task2CodeAppearsOnlyWhenProvenanceChecksPass",
             ),
-        )
-        println(
-            evidenceFor(
-                taskId = "G03",
-                fqcn = "com.example.secretlab.lab.TaskCompletionStudentTest",
-                required = listOf(
-                    "task3CodeAppearsOnlyWhenIntegrityVerdictAndBindingAreReady",
-                ),
-                code = "I3B9T",
+            code = "K2Q7M",
+        ).takeIf { it.isNotBlank() }?.let(::println)
+        evidenceFor(
+            taskId = "G03",
+            fqcn = "com.example.secretlab.lab.TaskCompletionStudentTest",
+            required = listOf(
+                "task3CodeAppearsOnlyWhenIntegrityVerdictAndBindingAreReady",
             ),
-        )
+            code = "I3B9T",
+        ).takeIf { it.isNotBlank() }?.let(::println)
     }
 }
 

@@ -1,6 +1,10 @@
 package com.example.secretlab.lab
 
-data class ApiKeyState(val storedApiKey: String?, val canUseSecureStorage: Boolean)
+data class ProvenanceState(
+    val signingIdentityMatchesExpected: Boolean,
+    val buildLooksTampered: Boolean,
+    val installTimeTrustIsSeparatedFromRuntimeTrust: Boolean,
+)
 
 data class IntegrityState(
     val verdict: String?,
@@ -9,16 +13,13 @@ data class IntegrityState(
 )
 
 object TaskCompletion {
-    const val TASK2_CODE = "K2Q7M"
-    const val TASK3_CODE = "I3B9T"
-
-    fun task2Code(state: ApiKeyState): String? {
-        // TODO(L06-2): reveal the short code only after the secure-storage/API-key flow is ready.
-        return null
+    fun task2Check(state: ProvenanceState): Boolean {
+        // TODO(G02): implement the APK / bundle provenance check from the lab proposal.
+        return false
     }
 
-    fun task3Code(state: IntegrityState): String? {
-        // TODO(L06-3): reveal the short code only after the integrity-gated backend request is ready.
-        return null
+    fun task3Check(state: IntegrityState): Boolean {
+        // TODO(G03): implement the integrity-gated backend request from the lab proposal.
+        return false
     }
 }
