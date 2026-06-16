@@ -1,0 +1,21 @@
+H01:
+  accepted_answers:
+    - HARDCODED_SECRET
+    - HARDCODED_API_KEY
+
+H02:
+  accepted_answers:
+    - CLEARTEXT_TRAFFIC
+    - CLEARTEXT_ENABLED
+
+H03:
+  accepted_answers:
+    - MODEL_DETECTED_VULNERABLE
+
+H04:
+  accepted_answers:
+    - HETEROGENEOUS_MULTI_AGENT_TRIAGE
+
+H05:
+  accepted_answers:
+    - AGENTIC_PATCH_VERIFICATION

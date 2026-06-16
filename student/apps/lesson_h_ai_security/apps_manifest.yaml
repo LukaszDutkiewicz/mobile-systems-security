@@ -1,0 +1,49 @@
+lesson:
+  id: BSM_L08
+  title: AI-assisted mobile application security assessment
+  type: single_lesson
+
+apps:
+  InsecureNotes:
+    path: student/apps/lesson_h_ai_security/InsecureNotes
+    purpose: source-code scan target
+    owned_files:
+      - student/apps/lesson_h_ai_security/InsecureNotes/README.md
+      - student/apps/lesson_h_ai_security/InsecureNotes/app/src/main/res/values/strings.xml
+    key_findings:
+      - HARDCODED_SECRET
+      - PLAINTEXT_SHARED_PREFERENCES
+      - SENSITIVE_LOGGING
+
+  FakeBankLite:
+    path: student/apps/lesson_h_ai_security/FakeBankLite
+    purpose: APK / MobSF target
+    owned_files:
+      - student/apps/lesson_h_ai_security/FakeBankLite/README.md
+      - student/apps/lesson_h_ai_security/FakeBankLite/app/src/main/AndroidManifest.xml
+    key_findings:
+      - CLEARTEXT_TRAFFIC
+      - BACKUP_ENABLED
+      - DEBUGGABLE_TRUE
+      - EXPORTED_COMPONENT
+
+  SecurePatchTarget_v1:
+    path: student/apps/lesson_h_ai_security/SecurePatchTarget_v1
+    purpose: vulnerable baseline for comparison
+    owned_files:
+      - student/apps/lesson_h_ai_security/SecurePatchTarget_v1/README.md
+      - student/apps/lesson_h_ai_security/SecurePatchTarget_v1/app/src/main/AndroidManifest.xml
+    key_findings:
+      - CLEARTEXT_TRAFFIC
+      - BACKUP_ENABLED
+      - DEBUGGABLE_TRUE
+
+  SecurePatchTarget_v2:
+    path: student/apps/lesson_h_ai_security/SecurePatchTarget_v2
+    purpose: patched comparison target
+    owned_files:
+      - student/apps/lesson_h_ai_security/SecurePatchTarget_v2/README.md
+      - student/apps/lesson_h_ai_security/SecurePatchTarget_v2/app/src/main/AndroidManifest.xml
+    key_findings:
+      - CLEARTEXT_TRAFFIC_FIXED
+      - BACKUP_DISABLED
